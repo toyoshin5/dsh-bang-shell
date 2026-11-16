@@ -1,0 +1,11 @@
+# Loader row this bundle adds. Override config from the profile's own
+# cordis.patch.yml under the same id.
+- insert:
+    - id: bang-shell
+      name: 'dsh-bang-shell'
+      config:
+        timeoutMs: 120000
+        maxOutputChars: 20000
+        loginShell: true
+        prefix: '[local shell output]'
+        includeCommand: false
