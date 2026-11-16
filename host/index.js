@@ -25,6 +25,8 @@ const DEFAULTS = Object.freeze({
   loginShell: true,
   prefix: '[local shell output]',
   includeCommand: false,
+  /** Register the model-facing guidance section. */
+  guidance: true,
 })
 
 function pick(config) {
@@ -107,8 +109,24 @@ function render(command, result, options) {
   return head + ' · ' + result.status + ' · ' + (result.ms / 1000).toFixed(2) + 's\n' + fence(shown)
 }
 
+const GUIDANCE = [
+  'A user message may start with "!": the host runs the rest of the line as a shell command and you receive only the output. The command line itself never reaches you.',
+  'Use this when a step needs a value you do not know and cannot obtain — an API key, an access token, a password, a session cookie, an account-specific identifier.',
+  'Never ask the user to paste such a value into the chat, and never guess it. When a command needs the value, prepare the command with a placeholder and ask the user to send it themselves, for example: !curl -H "Authorization: Bearer <API_KEY>" https://api.example.com/v1/me',
+  'Ask for one command at a time: you will not see which line was sent, only its output, so keep track of what you asked for.',
+  'You cannot send a "!" message yourself; it is a user gesture. The output comes back to you verbatim, so when it may contain the value, tell the user to filter it (for example with | grep -v).',
+].join(' ')
+
 export function apply(ctx, config = {}) {
   const options = pick(config)
+
+  if (options.guidance !== false) {
+    try {
+      ctx.inject(['systemPrompt'], (scope) => {
+        scope.systemPrompt.section({ name: 'bang-shell', order: 950, text: GUIDANCE })
+      })
+    } catch { /* no system prompt in this composition */ }
+  }
 
   async function cwdFor(signal) {
     try {
